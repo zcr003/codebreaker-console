@@ -26,7 +26,7 @@ public class Application {
   private Game game;
 
   //This is a constructor
-  private Application(String[] args) throws IOException {
+  private Application(String[] args) {
     String pool = DEFAULT_POOL;
     int length = DEFAULT_LENGTH;
 
@@ -52,21 +52,29 @@ public class Application {
     scanner = new Scanner(System.in);
   }
 
-  //Creating an instance and invoking the startGame method.
-  public static void main(String[] args) throws IOException {
-    Application application = new Application(args);
-    application.startGame();
-    boolean solved;
-
-    //Do-while loop - Check condition, if it is not (!)solved then repeats until it is.
-    do {
-      String text = application.getGuess();
-      Guess guess = application.submitGuess(text);
-      application.printGuessResults(guess);
-      solved = guess.isSolution();
-
-
-    } while (!solved);
+  // This is our main method.
+  public static void main(String[] args) {
+    //Try-catch method that jumps down to line 69 and throws IO ex for invalid entry of connection failure.
+    try {
+      Application application = new Application(args);
+      application.startGame();
+      boolean solved = false;
+      //Do-while loop - Check condition, if it is not (!)solved then repeats until it is.
+      do {
+        try {
+          String text = application.getGuess();
+          Guess guess = application.submitGuess(text);
+          application.printGuessResults(guess);
+          solved = guess.isSolution();
+        } catch (BadGuessException e) {
+          System.out.println("That's not quite right. Keep on Truckin'.");
+        }
+      } while (!solved);
+    } catch (IOException e) {
+      System.out.println("Unable to connect to Codebreaker service.");
+    } catch (BadGameException e) {
+      System.out.println("Invalid pool or code length.");
+    }
   }
 
   //Declaration of the startGame method
@@ -91,7 +99,7 @@ public class Application {
     System.out.printf("Guess \"%s\" had %d exact matches and %d near matches.%n",
         guess.getText(), guess.getExactMatches(), guess.getNearMatches());
     if (guess.isSolution()) {
-      System.out.println("Success! You solved it correctly!");
+      System.out.println("You're wise beyond your years! You solved it correctly!");
     }
   }
 
