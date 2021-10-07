@@ -6,6 +6,7 @@ import edu.cnm.deepdive.codebreaker.service.GameRepository;
 import edu.cnm.deepdive.codebreaker.service.GameRepository.BadGameException;
 import edu.cnm.deepdive.codebreaker.service.GameRepository.BadGuessException;
 import java.io.IOException;
+import java.util.ResourceBundle;
 import java.util.Scanner;
 
 public class Application {
@@ -21,6 +22,7 @@ public class Application {
   private final String pool;
   private final int length;
   private final Scanner scanner;
+  private final ResourceBundle bundle;
 
   //neither static nor final
   private Game game;
@@ -50,13 +52,15 @@ public class Application {
     this.pool = pool;
     this.length = length;
     scanner = new Scanner(System.in);
+    bundle = ResourceBundle.getBundle("strings");
   }
 
   // This is our main method.
   public static void main(String[] args) {
+    Application application = new Application(args);
+
     //Try-catch method that jumps down to line 69 and throws IO ex for invalid entry of connection failure.
     try {
-      Application application = new Application(args);
       application.startGame();
       boolean solved = false;
       //Do-while loop - Check condition, if it is not (!)solved then repeats until it is.
@@ -67,13 +71,13 @@ public class Application {
           application.printGuessResults(guess);
           solved = guess.isSolution();
         } catch (BadGuessException e) {
-          System.out.println("That's not quite right. Keep on Truckin'.");
+          System.out.println(application.bundle.getString("invalid_guess"));
         }
       } while (!solved);
     } catch (IOException e) {
-      System.out.println("Unable to connect to Codebreaker service.");
+      System.out.println(application.bundle.getString("io_exception"));
     } catch (BadGameException e) {
-      System.out.println("Invalid pool or code length.");
+      System.out.println(application.bundle.getString("invalid_game"));
     }
   }
 
@@ -84,7 +88,7 @@ public class Application {
 
   //Output to the user
   private String getGuess() {
-    System.out.printf("Please enter a guess of %d characters from the pool \"%s\":%n",
+    System.out.printf(bundle.getString("guess_prompt"),
         game.getLength(), game.getPool());
     return scanner.next().trim();
   }
@@ -96,10 +100,10 @@ public class Application {
 
   //Result output back to the user
   private void printGuessResults(Guess guess) {
-    System.out.printf("Guess \"%s\" had %d exact matches and %d near matches.%n",
+    System.out.printf(bundle.getString("guess_results"),
         guess.getText(), guess.getExactMatches(), guess.getNearMatches());
     if (guess.isSolution()) {
-      System.out.println("You're wise beyond your years! You solved it correctly!");
+      System.out.println(bundle.getString("solution"));
     }
   }
 
