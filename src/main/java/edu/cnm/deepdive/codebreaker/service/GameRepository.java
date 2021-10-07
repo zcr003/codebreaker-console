@@ -6,6 +6,7 @@ import java.io.IOException;
 import retrofit2.Call;
 import retrofit2.Response;
 
+//Main Class
 public class GameRepository {
 
   private final WebServiceProxy proxy;
@@ -15,19 +16,20 @@ public class GameRepository {
   }
 
   //Game Method.
-  public Game startGame(String pool, int length) throws IOException {
+  public Game startGame(String pool, int length) throws IOException, BadGameException {
     Game game = new Game();
     game.setPool(pool);
     game.setLength(length);
     Call<Game> call = proxy.startGame(game);
     Response<Game> response = call.execute();
     if (!response.isSuccessful()) {
-      throw new RuntimeException(response.message());
+      throw new BadGameException(response.message());
     }
     return response.body();
   }
+
   //Guess Method.
-  public Guess submitGuess(Game game, String text) throws IOException {
+  public Guess submitGuess(Game game, String text) throws IOException, BadGuessException {
     Guess guess = new Guess();
     guess.setText(text);
     Response<Guess> response = proxy
@@ -41,10 +43,19 @@ public class GameRepository {
   }
 
   //Nested Class.
-  public class BadGuessException extends IllegalArgumentException {
+  public static class BadGuessException extends IllegalArgumentException {
 
     //This inherits all of IllegalArgsException traits
     public BadGuessException(String message) {
+      super(message);
+    }
+  }
+
+  //Constructor name must match class name w/out exception
+  public static class BadGameException extends IllegalArgumentException {
+
+    //This inherits all of IllegalArgsException traits
+    public BadGameException(String message) {
       super(message);
     }
   }

@@ -1,11 +1,12 @@
 package edu.cnm.deepdive.codebreaker;
 
 import edu.cnm.deepdive.codebreaker.model.Game;
+import edu.cnm.deepdive.codebreaker.model.Guess;
 import edu.cnm.deepdive.codebreaker.service.GameRepository;
-import edu.cnm.deepdive.codebreaker.service.WebServiceProxy;
+import edu.cnm.deepdive.codebreaker.service.GameRepository.BadGameException;
+import edu.cnm.deepdive.codebreaker.service.GameRepository.BadGuessException;
 import java.io.IOException;
-import retrofit2.Call;
-import retrofit2.Response;
+import java.util.Scanner;
 
 public class Application {
 
@@ -17,6 +18,9 @@ public class Application {
 
   //This group is final but non-static.
   private final GameRepository repository;
+  private final String pool;
+  private final int length;
+  private final Scanner scanner;
 
   //neither static nor final
   private Game game;
@@ -41,22 +45,54 @@ public class Application {
         //Do nothing.
     }
     repository = new GameRepository();
-    startGame(pool, length);
+
+    // [this] statement is the identifier for current instance of this class.
+    this.pool = pool;
+    this.length = length;
+    scanner = new Scanner(System.in);
   }
 
-  private void startGame(String pool, int length) throws IOException {
+  //Creating an instance and invoking the startGame method.
+  public static void main(String[] args) throws IOException {
+    Application application = new Application(args);
+    application.startGame();
+    boolean solved;
+
+    //Do-while loop - Check condition, if it is not (!)solved then repeats until it is.
+    do {
+      String text = application.getGuess();
+      Guess guess = application.submitGuess(text);
+      application.printGuessResults(guess);
+      solved = guess.isSolution();
+
+
+    } while (!solved);
+  }
+
+  //Declaration of the startGame method
+  private void startGame() throws IOException, BadGameException {
     game = repository.startGame(pool, length);
   }
 
-  //This runs outside an instance
-  public static void main(String[] args) throws IOException {
-    Application application = new Application(args);
-    // TODO While code is not guessed:
-    //    1.Read guess from user input
-    //    2.Submit guess to codebreaker service
-    //    3. Display guess results
-
+  //Output to the user
+  private String getGuess() {
+    System.out.printf("Please enter a guess of %d characters from the pool \"%s\":%n",
+        game.getLength(), game.getPool());
+    return scanner.next().trim();
   }
 
+  //Input from the user
+  private Guess submitGuess(String text) throws IOException, BadGuessException {
+    return repository.submitGuess(game, text);
+  }
+
+  //Result output back to the user
+  private void printGuessResults(Guess guess) {
+    System.out.printf("Guess \"%s\" had %d exact matches and %d near matches.%n",
+        guess.getText(), guess.getExactMatches(), guess.getNearMatches());
+    if (guess.isSolution()) {
+      System.out.println("Success! You solved it correctly!");
+    }
+  }
 
 }
